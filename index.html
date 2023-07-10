@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comprobante de Retención</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+  
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+  
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+  
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+  
+    th {
+      background-color: #f2f2f2;
+    }
+  
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  
+    .form-group {
+      margin-bottom: 20px;
+    }
+  
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+  
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  
+    .button-group {
+      margin-top: 20px;
+    }
+  
+    .button-group button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+  
+    .button-group button:last-child {
+      margin-right: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>SISTEMA DE COMPROBANTE DE RETENCIONES</h2>
+    <div class="form-group">
+      <label for="ruc">RUC:</label>
+      <input type="text" id="ruc" maxlength="11" pattern="[0-9]{11}" required>
+    </div>
+    <div class="form-group">
+      <label for="periodo">PERIODO (aaaamm):</label>
+      <input type="text" id="periodo" maxlength="6" pattern="[0-9]{6}" required>
+      <span id="periodoError" style="color: red; display: none;">La fecha del periodo debe tener la siguiente estructura aaaamm</span>
+    </div>
+    <h2>DATOS DEL COMPROBANTE DE RETENCIONES</h2>
+    <div class="form-group">
+      <label for="rucAgente">RUC AGENTE:</label>
+      <input type="text" id="rucAgente" maxlength="11" pattern="[0-9]{11}" required>
+    </div>
+    <div class="form-group">
+      <label for="serieCR">SERIE CR:</label>
+      <input type="text" id="serieCR" maxlength="4" required>
+    </div>
+    <div class="form-group">
+      <label for="numeroCR">NUMERO CR:</label>
+      <input type="text" id="numeroCR" maxlength="8" required>
+    </div>
+    <div class="form-group">
+      <label for="fechaEmisionCR">FECHA DE EMISION CR (dd/mm/aaaa):</label>
+      <input type="text" id="fechaEmisionCR" maxlength="10" pattern="\d{2}/\d{2}/\d{4}" required>
+    </div>
+    <div class="form-group">
+      <label for="montoCR">MONTO DEL COMPROBANTE CR:</label>
+      <input type="text" id="montoCR" required>
+    </div>
+    <div class="form-group">
+      <label for="tipoComprobante">TIPO DE COMPROBANTE:</label>
+      <select id="tipoComprobante" required>
+        <option value="">Seleccione...</option>
+        <option value="01">FACTURA</option>
+        <option value="07">NOTA DE CRÉDITO</option>
+        <option value="08">NOTA DE DÉBITO</option>
+        <option value="12">TICKET</option>
+        <option value="99">OTROS</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="serieCP">SERIE CP:</label>
+      <input type="text" id="serieCP" maxlength="4" required>
+    </div>
+    <div class="form-group">
+      <label for="numeroCP">NUMERO CP:</label>
+      <input type="text" id="numeroCP" maxlength="8" required>
+    </div>
+    <div class="form-group">
+      <label for="fechaEmisionCP">FECHA DE EMISION CP (dd/mm/aaaa):</label>
+      <input type="text" id="fechaEmisionCP" maxlength="10" pattern="\d{2}/\d{2}/\d{4}" required>
+    </div>
+    <div class="form-group">
+      <label for="valorCP">VALOR DEL CP:</label>
+      <input type="text" id="valorCP" required>
+    </div>
+    <div class="button-group">
+      <button onclick="registrarResultado()">Registrar Resultado</button>
+      <button onclick="limpiarDatos()">Limpiar Datos</button>
+      <button onclick="visualizarTabla()">Visualizar Tabla</button>
+      <button onclick="generarTXT()">GenerarTXT</button>
+    </div>
+    <div id="tablaContainer" style="display: none;">
+      <h2>Tabla de Comprobantes</h2>
+      <table id="tablaComprobantes">
+        <thead>
+          <tr>
+            <th>ELIMINAR</th>
+            <th>RUC AGENTE</th>
+            <th>SERIE CR</th>
+            <th>NÚMERO CR</th>
+            <th>FECHA DE EMISIÓN CR</th>
+            <th>MONTO DE COMPROBANTE</th>
+            <th>TIPO DE COMPROBANTE</th>
+            <th>SERIE CP</th>
+            <th>NÚMERO CP</th>
+            <th>FECHA DE EMISIÓN CP</th>
+            <th>VALOR DEL CP</th>
+          </tr>
+        </thead>
+<tbody id="tablaBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function validarPeriodo() {
+      const periodoInput = document.getElementById('periodo');
+      const periodoError = document.getElementById('periodoError');
+      const periodoPattern = /^\d{6}$/;
+
+      if (!periodoPattern.test(periodoInput.value)) {
+        periodoError.style.display = 'block';
+      } else {
+        periodoError.style.display = 'none';
+      }
+    }
+
+    function completarConCeros(numero, longitud) {
+      const numString = String(numero);
+      const cerosFaltantes = longitud - numString.length;
+      return '0'.repeat(cerosFaltantes) + numString;
+    }
+
+    function completarNumeroCR() {
+      const numeroCRInput = document.getElementById('numeroCR');
+      const numeroCR = numeroCRInput.value;
+      const numeroCRCompleto = completarConCeros(numeroCR, 8);
+      numeroCRInput.value = numeroCRCompleto;
+    }
+
+    function completarNumeroCP() {
+      const numeroCPInput = document.getElementById('numeroCP');
+      const numeroCP = numeroCPInput.value;
+      const numeroCPCompleto = completarConCeros(numeroCP, 8);
+      numeroCPInput.value = numeroCPCompleto;
+    }
+
+    function formatearMonto(monto) {
+      return parseFloat(monto).toFixed(2);
+    }
+
+    function registrarResultado() {
+      completarNumeroCR();
+      completarNumeroCP();
+
+      const rucAgente = document.getElementById('rucAgente').value;
+      const serieCR = document.getElementById('serieCR').value;
+      const numeroCR = document.getElementById('numeroCR').value;
+      const fechaEmisionCR = document.getElementById('fechaEmisionCR').value;
+      const montoCR = formatearMonto(document.getElementById('montoCR').value);
+      const tipoComprobante = document.getElementById('tipoComprobante').value;
+      const serieCP = document.getElementById('serieCP').value;
+      const numeroCP = document.getElementById('numeroCP').value;
+      const fechaEmisionCP = document.getElementById('fechaEmisionCP').value;
+      const valorCP = formatearMonto(document.getElementById('valorCP').value);
+
+      const tablaBody = document.getElementById('tablaBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><i class="fas fa-trash-alt" onclick="eliminarFila(this)"></i></td>
+        <td>${rucAgente}</td>
+        <td>${serieCR}</td>
+        <td>${numeroCR}</td>
+        <td>${fechaEmisionCR}</td>
+        <td>${montoCR}</td>
+        <td>${tipoComprobante}</td>
+        <td>${serieCP}</td>
+        <td>${numeroCP}</td>
+        <td>${fechaEmisionCP}</td>
+        <td>${valorCP}</td>
+      `;
+      tablaBody.appendChild(row);
+    }
+
+    function limpiarDatos() {
+      document.getElementById('rucAgente').value = '';
+      document.getElementById('serieCR').value = '';
+      document.getElementById('numeroCR').value = '';
+      document.getElementById('fechaEmisionCR').value = '';
+      document.getElementById('montoCR').value = '';
+      document.getElementById('tipoComprobante').value = '';
+      document.getElementById('serieCP').value = '';
+      document.getElementById('numeroCP').value = '';
+      document.getElementById('fechaEmisionCP').value = '';
+      document.getElementById('valorCP').value = '';
+    }
+
+    function visualizarTabla() {
+      const tablaContainer = document.getElementById('tablaContainer');
+      tablaContainer.style.display = 'block';
+    }
+
+    function generarTXT() {
+      const ruc = document.getElementById('ruc').value;
+      const periodo = document.getElementById('periodo').value;
+
+      const tablaBody = document.getElementById('tablaBody');
+      const rows = tablaBody.getElementsByTagName('tr');
+
+      let txtContent = '';
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        for (let j = 1; j < cells.length; j++) {
+          txtContent += cells[j].textContent.trim();
+          if (j !== cells.length - 1) {
+            txtContent += '|';
+          }
+        }
+        if (i !== rows.length - 1) {
+          txtContent += '\n';
+        }
+      }
+
+      const txtFilename = '0621' + ruc + periodo + 'R.txt';
+
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(txtContent));
+      element.setAttribute('download', txtFilename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+
+    function eliminarFila(icon) {
+      const row = icon.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+    }
+
+    const periodoInput = document.getElementById('periodo');
+    periodoInput.addEventListener('blur', validarPeriodo);
+  </script>
+</body>
+</html>
+
+
+
